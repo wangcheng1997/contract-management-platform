@@ -1,7 +1,7 @@
 <!-- src/views/Contracts.vue -->
 <template>
   <div class="bg-gray-50 min-h-screen">
-    <app-header />
+    <AppHeader />
     
     <div class="container mx-auto px-4 py-6">
       <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 space-y-4 md:space-y-0">
@@ -169,7 +169,7 @@
       </div>
     </div>
     
-    <app-footer />
+    <AppFooter />
   </div>
 </template>
 
