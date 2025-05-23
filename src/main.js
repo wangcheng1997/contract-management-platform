@@ -1,4 +1,3 @@
-// src/main.js
 import { createApp } from 'vue'
 import App from './App.vue'
 import { createRouter, createWebHistory } from 'vue-router'
@@ -11,7 +10,6 @@ import EditContract from '@/views/EditContract.vue'
 import Settings from '@/views/Settings.vue'
 import Login from '@/views/Login.vue'
 import Register from '@/views/Register.vue'
-import { useUserStore } from '@/stores/user'
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
 // 配置 Supabase
@@ -22,36 +20,54 @@ export const supabase = createClient(
 
 // 创建路由
 const routes = [
-  { path: '/', component: Dashboard, meta: { requiresAuth: true } },
-  { path: '/contracts', component: Contracts, meta: { requiresAuth: true } },
-  { path: '/contracts/add', component: AddContract, meta: { requiresAuth: true } },
-  { path: '/contracts/:id', component: ContractDetails, meta: { requiresAuth: true } },
-  { path: '/contracts/:id/edit', component: EditContract, meta: { requiresAuth: true } },
-  { path: '/settings', component: Settings, meta: { requiresAuth: true } },
-  { path: '/login', component: Login },
-  { path: '/register', component: Register }
+  { path: '/', name: 'Dashboard', component: Dashboard, meta: { requiresAuth: true } },
+  { path: '/contracts', name: 'Contracts', component: Contracts, meta: { requiresAuth: true } },
+  { path: '/contracts/add', name: 'AddContract', component: AddContract, meta: { requiresAuth: true } },
+  { path: '/contracts/:id', name: 'ContractDetails', component: ContractDetails, meta: { requiresAuth: true } },
+  { path: '/contracts/:id/edit', name: 'EditContract', component: EditContract, meta: { requiresAuth: true } },
+  { path: '/settings', name: 'Settings', component: Settings, meta: { requiresAuth: true } },
+  { path: '/login', name: 'Login', component: Login },
+  { path: '/register', name: 'Register', component: Register }
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
-  routes
+  history: createWebHistory(import.meta.env.BASE_URL), // 适应Vercel部署
+  routes,
+  scrollBehavior(to, from, savedPosition) {
+    // 滚动行为：导航时自动滚动到顶部
+    if (savedPosition) {
+      return savedPosition;
+    } else {
+      return { top: 0 };
+    }
+  }
 })
 
 // 路由守卫
 router.beforeEach(async (to, from) => {
-  const userStore = useUserStore()
+  const { data: { user } } = await supabase.auth.getUser();
   
-  // 如果用户未登录且访问需要认证的页面，重定向到登录页
-  if (to.meta.requiresAuth && !userStore.user) {
-    return { path: '/login' }
+  if (to.meta.requiresAuth && !user) {
+    return { 
+      path: '/login',
+      query: { redirect: to.fullPath } // 保存原始路径，登录后重定向
+    };
   }
   
-  // 如果用户已登录且访问登录或注册页，重定向到首页
-  if ((to.path === '/login' || to.path === '/register') && userStore.user) {
-    return { path: '/' }
+  if ((to.path === '/login' || to.path === '/register') && user) {
+    return { path: '/' };
   }
-})
+});
 
-const app = createApp(App)
-app.use(router)
-app.mount('#app')
+// 创建应用
+const app = createApp(App);
+
+// 全局错误处理
+app.config.errorHandler = (err, instance, info) => {
+  console.error('全局错误捕获:', err, info);
+  // 可以在这里添加错误提示
+};
+
+// 挂载应用
+app.use(router);
+app.mount('#app');
