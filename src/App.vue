@@ -179,6 +179,7 @@ import { useRouter } from 'vue-router'
 import { getContracts, deleteContract } from '@/services/contracts'
 import AppHeader from '@/components/AppHeader.vue'
 import AppFooter from '@/components/AppFooter.vue'
+import Toast from '@/components/Toast.vue'
 import { useToast } from '@/composables/useToast'
 
 const router = useRouter()
